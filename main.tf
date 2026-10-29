@@ -60,7 +60,7 @@ module "psql01dev" {
   storage_mb     = 1048576
 
   # VNet integration (private access)
-  delegated_subnet_id           = azurerm_subnet.databases-psql-01.id
+  delegated_subnet_id           = azurerm_subnet_route_table_association.databases-psql-01.subnet_id
   private_dns_zone_id           = azurerm_private_dns_zone.postgresql.id
   public_network_access_enabled = false
 
@@ -240,7 +240,7 @@ module "internal_lb" {
   environment         = local.environment
   location            = local.location
   resource_group_name = data.azurerm_resource_group.workload.name
-  vnet_id             = data.azurerm_virtual_network.main.id
+  vnet_id             = data.azurerm_virtual_network.workload.id
   subnet_id           = azurerm_subnet.apps-01.id
   private_ip_address  = "10.86.82.10"
   dns_zone_name       = "azurenfx.internal"

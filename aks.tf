@@ -28,8 +28,9 @@ resource "azurerm_kubernetes_cluster" "this" {
   sku_tier = "Standard"
 
   # Private API server with an AKS-managed private DNS zone
-  private_cluster_enabled = true
-  private_dns_zone_id     = "System"
+  private_cluster_enabled             = true
+  private_cluster_public_fqdn_enabled = false
+  private_dns_zone_id                 = "System"
 
   # Workload Identity / OIDC
   oidc_issuer_enabled       = true
@@ -41,10 +42,11 @@ resource "azurerm_kubernetes_cluster" "this" {
     azure_rbac_enabled = true
   }
 
-  # Matches the AVM module default. To use the dedicated AKS control-plane
-  # identity instead, switch to type = "UserAssigned" with identity_ids.
+  # Reuse the pre-provisioned identity; verify its existing network permissions.
+  # Terraform does not create or widen role assignments.
   identity {
-    type = "SystemAssigned"
+    type         = "UserAssigned"
+    identity_ids = [data.azurerm_user_assigned_identity.D_AZ_LMK_NFX_DEV_01_msi_aks_control_plane.id]
   }
 
   # System node pool: min 3 nodes spread across the 3 availability zones
@@ -66,6 +68,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     network_plugin_mode = "overlay" # required by Azure CNI Powered by Cilium
     network_data_plane  = "cilium"
     network_policy      = "cilium"
+    load_balancer_sku   = "standard"
     outbound_type       = "userDefinedRouting"
     service_cidr        = "10.100.0.0/16"
     dns_service_ip      = "10.100.0.10"
